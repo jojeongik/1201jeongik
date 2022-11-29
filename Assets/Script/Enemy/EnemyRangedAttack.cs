@@ -113,10 +113,10 @@ public class EnemyRangedAttack : EnemyController
                 CC.enabled = false;
                 Invoke("DeActive", 1);
                 Invoke("UnActiveHpSlider", 1);
-                Invoke("DropItem", 1.2f);
+                Invoke("DropItem", 1f);
                 StopMove();
                 player.CurrentExp += EnemyExp;
-                Invoke("Revive", 10);
+                //Invoke("Revive", 10);
             }
             else
             {

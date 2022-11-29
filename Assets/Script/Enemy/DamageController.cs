@@ -10,16 +10,21 @@ public class DamageController : MonoBehaviour
     public virtual void EnemyOnDamage(float damage)
     {
         hp -= damage;
-        //if (hp <= 0)
-        //{
-        //    DestroyObject();
-        //}
+        if (hp <= 0)
+        {
+            Invoke("DestroyObject", 1.2f);
+        }
     }
     public virtual void EnemyOnSlowDamage(float damage)  //슬로우스킬피해받았을때
     {
         hp -= damage;
         StartCoroutine(SlowSpeed());
         StartCoroutine(SlowColor());
+        hp -= damage;
+        if (hp <= 0)
+        {
+            Invoke("DestroyObject",1.2f);
+        }
     }
     public virtual void PlayerOnDamage(float damage)
     {
@@ -29,9 +34,8 @@ public class DamageController : MonoBehaviour
         //    DestroyObject();
         //}
     }
-    protected virtual void DestroyObject()
+    public virtual void DestroyObject()
     {
-        CommonDestroyFunction();
         Destroy(gameObject);
     }
     protected void CommonDestroyFunction()
