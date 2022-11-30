@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -41,6 +42,10 @@ public class PlayerMoving : DamageController
     public static float Size = 1;// 서클 사이즈
     public static float AngleSpeed = 1; // 회전 속도
     public static float SkillDamage;
+    GameObject scanObject;
+    public int Money;
+    public int AbilityPoint;
+    PlayerStatText playerStatText;
 
 
 
@@ -51,6 +56,7 @@ public class PlayerMoving : DamageController
         SR = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         CC = GetComponent<CapsuleCollider2D>();
+        playerStatText = GetComponent<PlayerStatText>();
         playerlayer = LayerMask.NameToLayer("Player");
         PDL = LayerMask.NameToLayer("PlayerDamaged"); // 플레이어 피격시 레이어
         floorlayer = LayerMask.NameToLayer("normalfloor");
@@ -195,7 +201,6 @@ public class PlayerMoving : DamageController
                     Physics2D.IgnoreLayerCollision(playerlayer, floorlayer, false);
                     Physics2D.IgnoreLayerCollision(PDL, floorlayer, false);
                     jumpcnt = 0;
-                    Debug.Log(jumpcnt);
                 }
             }
         }
@@ -218,16 +223,19 @@ public class PlayerMoving : DamageController
             PlayerHp += 20;
             CurrentHp = PlayerHp;
             hp = PlayerHp;
+            AbilityPoint += 3;
             PlayerAtkDmg += 2;
             AngleSpeed += 1;
             Size += 0.1f;
+
+            playerStatText.StatTextUpLoad();
 
             GameObject hudText = Instantiate(LevelUpText); //Levelup 텍스트 생성
             hudText.transform.position = hudPos.position;
             hudText.transform.Translate(Vector3.left * 4, Space.World); //LEVEL UP 텍스트 표시 위치 좌측으로 고정이동
 
         }
-        if (CurrentHp != hp && CurrentHp > hp)
+        if (CurrentHp != hp && CurrentHp > hp)   //체력 감소시
         {
             float dmg = CurrentHp - hp;
             GameObject hudText = Instantiate(hudDamageText);
@@ -243,6 +251,23 @@ public class PlayerMoving : DamageController
 
             //anim.SetTrigger("Damaged");
             Invoke("OffDamaged", 2);
+        }
+        if (CurrentHp > PlayerHp)   // 체력회복시
+        {
+            CurrentHp = PlayerHp;
+            hp = CurrentHp;
+        }
+        if (Input.GetKeyDown(KeyCode.T) && (scanObject != null))     // T를 누를경우 상호작용           
+            {
+                gameManger.SearchAction(scanObject);
+            }
+        if (Input.GetKeyDown(KeyCode.F1))    // F1를 누를경우 도움말           
+        {
+            gameManger.HelpButton();
+        }
+        if (Input.GetKeyDown(KeyCode.F2))    // F2를 누를경우 플레이어스텟창           
+        {
+            gameManger.PlayerStatButton();
         }
     }
 
@@ -263,13 +288,28 @@ public class PlayerMoving : DamageController
         {
             rigid.velocity = new Vector2(MaxSpeed * (-1), rigid.velocity.y);
         }
-        // Debug.Log(anim.GetBool("jumping"));
+        Debug.DrawRay(rigid.position, Vector3.left * 1f, new Color(0, 1, 0));
+        Debug.DrawRay(rigid.position, Vector3.right * 1f, new Color(0, 1, 0));
+        RaycastHit2D rayLeftHit = Physics2D.Raycast(rigid.position, Vector3.left, 1f,LayerMask.GetMask("SearchObject"));
+        RaycastHit2D rayRightHit = Physics2D.Raycast(rigid.position, Vector3.right, 1f, LayerMask.GetMask("SearchObject"));
+        if (rayLeftHit.collider != null)
+        {
+            scanObject = rayLeftHit.collider.gameObject;
+        }
+        else if(rayRightHit.collider != null)
+        {
+            scanObject = rayRightHit.collider.gameObject;
+        }
+        else
+        {
+            scanObject = null;
+        }
 
 
     }
-
-    // 피격 판정
-    void OnCollisionEnter2D(Collision2D collision)
+   
+// 피격 판정
+void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag == "Enemy")
         {

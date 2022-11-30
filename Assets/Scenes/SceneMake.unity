@@ -111047,7 +111047,7 @@ MonoBehaviour:
   SR: {fileID: 0}
   BC: {fileID: 0}
   animation: {fileID: 0}
-  player: {fileID: 0}
+  player: {fileID: 462656173}
   CC: {fileID: 0}
   h: 0
   speed: 1

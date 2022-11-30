@@ -13,14 +13,32 @@ public class GameManger : MonoBehaviour
     public PlayerMoving player;
     public GameObject[] Stages;
     public GameObject Restart_Button;
+    public GameObject menuSet;  
+
+    //Canvas관련
+    public TalkManager talkManager;
+    public GameObject talkPanel;
+    public Text talkText;
+    public Image portraitImg;
+    public GameObject storePanel;   
+    public StoreBuyText storeBuyText;
+    public GameObject playerStatPanel;
+    public PlayerStatText playerStatText;
+    public GameObject HelpPanel;
     public Text playerLevelText;
     public Text playerHpText;
-    public GameObject menuSet;
+
+    // Inspector에서 사용x
     static int StageIndex;
     static int isLoad;
     public bool isSlow;
- 
-
+    public GameObject scanObject;
+    public bool isTalkPanelActive;
+    public bool isPlayerStatPanel;
+    public bool isHelpPanel;
+    public int talkIndex;
+    public int AttackPoint_Price = 10;
+    public int HpPoint_Price = 10;
     //public Image[] Life;
 
     void Start()
@@ -44,6 +62,8 @@ public class GameManger : MonoBehaviour
         playerLevelText.text = "Lv . " + player.PlayerLevel.ToString();
         playerHpText.text = player.CurrentHp.ToString() + " / " + player.PlayerHp.ToString();
         isSlow = false;
+        isPlayerStatPanel = false;
+        isHelpPanel = false;
 
     }
 
@@ -51,22 +71,14 @@ public class GameManger : MonoBehaviour
     {
         if (Input.GetButtonDown("Cancel"))
         {
-            if (menuSet.activeSelf)
-            {
-                menuSet.SetActive(false);
-                Time.timeScale = 1;
-            }
-            else
-            {
-                menuSet.SetActive(true);
-                Time.timeScale = 0;
-            }                
-        }       
+            MenuSetButton();
+        }
     }
     private void FixedUpdate()
     {
         playerLevelText.text = "Lv . " + player.PlayerLevel.ToString();
         playerHpText.text = player.CurrentHp.ToString() + " / " + player.PlayerHp.ToString();
+
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -264,5 +276,154 @@ public class GameManger : MonoBehaviour
     {
         isSlow = false;
     }
+    public void SearchAction(GameObject scan_Object)
+    {
+        //scanObject = scan_Object;
+        //ObjectData objData = scanObject.GetComponent<ObjectData>();
+        //Talk(objData.id, objData.isNpc);
+        //talkPanel.SetActive(isTalkPanelActive);
+        scanObject = scan_Object;
+        ObjectData objData = scanObject.GetComponent<ObjectData>();
+        if (objData.isNpc == true)
+        {
+            Talk(objData.id, objData.isNpc);
+            talkPanel.SetActive(isTalkPanelActive);
+        }
+        else if (objData.isStore == true)
+        {
+            OpenStore();
+        }
+        else if (objData.isKey == true)
+        {
+            if(objData.id == 103)
+            {
+                Talk(objData.id, objData.isNpc);
+                talkPanel.SetActive(isTalkPanelActive);
+            }
+        }
 
+
+    }
+    void Talk(int id, bool isNpc)
+    {
+        string talkData = talkManager.GetTalk(id, talkIndex);
+        if (talkData == null)
+        {
+            isTalkPanelActive = false;
+            talkIndex = 0;
+            return;
+        }
+        if (isNpc)
+        {
+            talkText.text = talkData.Split(':')[0];
+            portraitImg.sprite = talkManager.GetPortrait(id, int.Parse(talkData.Split(':')[1]));
+            portraitImg.color = new Color(1, 1, 1, 1);
+        }
+        else
+        {
+            talkText.text = talkData;
+            portraitImg.color = new Color(1, 1, 1, 0);
+        }
+        isTalkPanelActive = true;
+        talkIndex++;
+    }
+    void OpenStore()
+    {
+        storePanel.SetActive(true);
+    }
+    public void CloseStore()
+    {
+        storePanel.SetActive(false);
+    }
+    public void BuyItem(string whatItem)
+    {
+        switch (whatItem)
+        {
+            case "ATTACKPOINT":
+                if (player.Money >= AttackPoint_Price)
+                {
+                    player.Money -= AttackPoint_Price;
+                    AttackPoint_Price += 10;
+                    storeBuyText.Buy_ATTACKPOINT_Text();
+                    player.PlayerAtkDmg += 1;
+                    playerStatText.PlayerATK_Text();
+                    playerStatText.PlayerTotalDmg_Text();
+                }
+                break;
+            case "HPPOINT":
+                if (player.Money >= HpPoint_Price)
+                {
+                    player.Money -= HpPoint_Price;
+                    HpPoint_Price += 10;
+                    storeBuyText.Buy_HPPOINT_Text();
+                    player.PlayerHp += 10;
+                    player.CurrentHp += 10;
+                    playerStatText.PlayerHP_Text();
+                }
+                break;
+        }
+    }
+    public void Buy_ATTACKPOINT_Button()   //상점에서 Atk 살때 버튼 호환
+    {
+        BuyItem("ATTACKPOINT");
+    }
+    public void Buy_HPPOINT_Button()
+    {
+        BuyItem("HPPOINT");
+    }
+    public void OpenPlayerStat()   // 스텟창 열림 호환
+    {
+        playerStatPanel.SetActive(true);
+        isPlayerStatPanel = true;
+    }
+    public void ClosePlayerStat()
+    {
+        playerStatPanel.SetActive(false);
+        isPlayerStatPanel = false;
+    }
+    public void PlayerStatButton()
+    {
+        if(isPlayerStatPanel == false)
+        {
+            OpenPlayerStat();
+        }
+        else
+        {
+            ClosePlayerStat();
+        }
+    }
+    public void OpenHelp()   //도움말팡 열림 호환
+    {
+        HelpPanel.SetActive(true);
+        isHelpPanel = true;
+    }
+    public void CloseHelp()
+    {
+        HelpPanel.SetActive(false);
+        isHelpPanel = false;
+    }
+    public void HelpButton()
+    {
+        if (isHelpPanel == false)
+        {
+            OpenHelp();
+        }
+        else
+        {
+            CloseHelp();
+        }
+    }
+    public void MenuSetButton()
+    {
+        if (menuSet.activeSelf)
+        {
+            menuSet.SetActive(false);
+            Time.timeScale = 1;
+        }
+        else
+        {
+            menuSet.SetActive(true);
+            Time.timeScale = 0;
+        }
+    }
 }
