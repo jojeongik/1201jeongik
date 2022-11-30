@@ -126,6 +126,7 @@ public class EnemyFlyMove : EnemyController
                 Invoke("DropItem", 1f);
                 StopMove();
                 player.CurrentExp += EnemyExp;
+                player.CircleEnergy += EnemyExp;
                 //Invoke("Revive", 10);
             }
             else
